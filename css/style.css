@@ -1,0 +1,52 @@
+*{
+    padding: 0;
+    margin: 0;
+    font-size: 20em;
+}
+
+body{
+    background: url(../snake.jpg) center center fixed;
+    background-size:contain;
+    background-repeat: no-repeat;
+    background-color: aqua;
+    overflow: hidden;/* to get rid of the scrollbar*/
+
+}
+.container{
+    display: flex;
+    justify-content:center ;
+    align-items: center;
+}
+
+h3{
+    color: black;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-size: 60px;
+    text-align: center;
+
+}
+#board{
+    border: 4px solid black;
+    width: 111vmin;
+    height: 79vmin;
+    background: linear-gradient(green,yellow);
+    display: grid;
+    grid-template-columns: repeat(16,1fr);
+    grid-template-rows: repeat(16,1fr);
+}
+.head{
+    background-color: rgb(230, 56, 29);
+    border: .25vmin solid black;
+    border-radius: 10px;
+    transform: scaleX(1.3) scaleY(1.3);
+}
+.snake{
+    background-color: rgb(64, 52, 231);
+    border: 0.25vmin solid white;
+    border-radius: 10px;
+}
+.food{
+    background: linear-gradient(purple,grey);
+    border: .25vmin solid white;
+    border-radius: 10px;
+}
