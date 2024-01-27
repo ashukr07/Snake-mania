@@ -1,112 +1,109 @@
-//game constant and variables
-let snakeVelocity = { x: 0, y: 0 };//at start of game the snake must be constant we have done it with object
-let speed = 5;
-let score=0;
-let lastPaintTime = 0;
-let snakeArr = [{ x: 11, y: 14 }];
-let foodParticle = { x: 6, y: 7 };
+//board
+let blockSize=25;
+let rows=20;
+let cols=20;
+let board;
+let context;
 
-//game function
-function main(ctime) { //it gives the current time at which it is running
-    window.requestAnimationFrame(main);//window is optional
-    //console.log(ctime);
-    if ((ctime - lastPaintTime) / 1000 < (1 / speed)) {//last baari kab paint hua tha screen fps bahut jyaada hogi toh use hame kam karna hai toh ham yaha use ek required number ya frequency se kam rhna chahiye chije. So here it will paint the screen only if this is greater than this
+//snake head
+let snakeX=blockSize*5;
+let snakeY=blockSize*5;
+let velocityX=0;
+let velocityY=0;
+
+let snakeBody=[]
+//food
+let foodX;
+let foodY;
+
+let gameOver=false;
+
+window.onload = ()=>{
+    board= document.getElementById("board");
+    board.height = rows*blockSize;
+    board.width = cols*blockSize;
+    context = board.getContext("2d"); //used for drawing on the board
+    placeFood();
+    document.addEventListener("keyup",changeDirection)
+    setInterval(update,100);
+}
+
+function update(){
+    if (gameOver){
         return;
     }
-    lastPaintTime = ctime;
-    gameEngine();
-}
-function isCollide(snake) {
-    //if snake bump into itself
-    for (let i = 1; i < snake.length; i++){
-       if (snake[i].x===snake[0].x && snake[i].y===snake[0].y) {
-        return true;
-       }
-    }
-    //if snake collides with wall
-    if (snake[0].x>16||snake[0].x<0 || snake[0].y>16||snake[0].y<0) {
-        return true;
-        
-    }
-    return false;
-}
 
-function gameEngine() {
-    //Part 1: update snake and food array
-    if (isCollide(snakeArr)) {
-        snakeVelocity={x:0,y:0};
-        alert("Game Over!!! Please enter any key to play again");
-        //this thing will occur after key is pressed, reintialising the value
-        snakeArr=[{x:11,y:14}];
-        score=0;
-
-    }
-   
-    //If the food is eaten then increment the score and regenrate the food
-    if (snakeArr[0].x===foodParticle.x && snakeArr[0].y===foodParticle.y){
-        snakeArr.unshift({x:snakeArr[0].x+snakeVelocity.x,y:snakeArr[0].x+snakeVelocity.x})
-        foodParticle={x:Math.round(2+12*Math.random()),y:Math.round(2+12*Math.random())}
-    }
-    //moving the snake
-    for (let i =  snakeArr.length-2; i >=0; i--) {
-        snakeArr[i+1]={...snakeArr[i]};//if will do it normally then there will be problem that at last all element will point it towards 1 element. to get rid of this we will apply destructuring so that it will point it to a new object
-        
-    }
-    snakeArr[0].x+=snakeVelocity.x;//0th element apna change nahi hua tha upar use yaha change kr diya
-    snakeArr[0].y+=snakeVelocity.y;
-
-
-    //part 2: Display the snake
-    board.innerHTML = "";
-    snakeArr.forEach((e, index) => {
-        //console.log(index);
-        snakeElement = document.createElement('div');
-        snakeElement.style.gridRowStart = e.y;
-        snakeElement.style.gridColumnStart = e.x;
-        if (index === 0)
-            snakeElement.classList.add('head');
-
-        else
-            snakeElement.classList.add('snake');
-
-        board.appendChild(snakeElement);
-
-    });
-    //display the food
-    foodElement = document.createElement('div');
-    foodElement.style.gridRowStart = foodParticle.y;
-    foodElement.style.gridColumnStart = foodParticle.x;
-    foodElement.classList.add('food');
-    board.appendChild(foodElement);
-}
-
-
-
-//main logic is here
-window.requestAnimationFrame(main);// this is being called only once so it is called multiple times we have called it again in function
-/*request animation frame is the improved version of the setTime interval 
--->in set time interval we give the time interval in which span it want to repeat the function
-jaise isme toh kaise ki ham fun repeat karwate hain chahe browser ready ho ya na ho 
-par animation frame me har baari screen repaint hota aur woh jabhi hota hai jb woh ready ho */
-window.addEventListener('keydown', e => {
-    snakeVelocity  = { x: 0, y: 1};//start the game
-    switch (e.key) {
-        case "ArrowUp":
-            snakeVelocity.x =0;
-            snakeVelocity.y =-1;//upar jane ke liye y ki value ghatani pdegi 
-            break;
-        case "ArrowDown":
-            snakeVelocity.x =0;
-            snakeVelocity.y =1;
-            break;
-        case "ArrowLeft":
-            snakeVelocity.x =-1;
-            snakeVelocity.y =0;
-            break;
-        case "ArrowRight":
-            snakeVelocity.x =1;
-            snakeVelocity.y =0;
-            break;
+    let grd = context.createLinearGradient(0, 0, board.width, board.height);
+    // light blue
+    grd.addColorStop(0, 'green');   
+    // dark blue
+    grd.addColorStop(1, 'yellow');
     
+    context.fillStyle=grd;
+    context.fillRect(0,0,board.width,board.height);
+
+    context.fillStyle="red";
+    context.fillRect(foodX,foodY,blockSize,blockSize);
+
+    if(snakeX==foodX && snakeY==foodY){
+        snakeBody.push([foodX,foodY]);
+        placeFood();
     }
-})
+
+    //if we move the forward part first then next part will not know where they are going 
+
+    for(let i=snakeBody.length-1;i>0;i--){
+        snakeBody[i]=snakeBody[i-1];
+    }
+    //then the starting body part at the place of the head
+    if(snakeBody.length){
+        snakeBody[0]=[snakeX,snakeY];
+
+    }
+
+
+    context.fillStyle="purple";
+    snakeX+=velocityX*blockSize;
+    snakeY+=velocityY*blockSize;
+    context.fillRect(snakeX,snakeY,blockSize,blockSize);
+    for(let i=0;i<snakeBody.length;i++){
+        context.fillRect(snakeBody[i][0],snakeBody[i][1],blockSize,blockSize);
+    }
+    if(snakeX<0||snakeX>blockSize*cols || snakeY<0 || snakeY>blockSize*rows){
+        gameOver=true;
+        alert("Game Over");
+    }
+
+    for(let i=0;i<snakeBody.length;i++){
+        if(snakeX==snakeBody[i][0]&&snakeY==snakeBody[i][1]){
+            gameOver=true;
+            alert("Game Over");
+        }
+    }
+
+}
+
+function changeDirection(e){
+    if(e.code=="ArrowUp" && velocityY!=1){
+        velocityX=0;
+        velocityY=-1;
+    }
+    if(e.code=="ArrowDown" && velocityY!=-1){
+        velocityX=0;
+        velocityY=1;
+    }
+    if(e.code=="ArrowLeft" && velocityX != 1){
+        velocityX=-1;
+        velocityY=0;
+    }
+    if(e.code=="ArrowRight" && velocityX != -1){
+        velocityX=1;
+        velocityY=0;
+    }
+}
+
+function placeFood(){
+    foodX = Math.floor(Math.random()*cols)*blockSize;
+    foodY = Math.floor(Math.random()*rows)*blockSize;
+
+}
